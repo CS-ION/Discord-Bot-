@@ -20,8 +20,6 @@ async def on_message(message):
         await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-no-nope-never-JPgrKbOaPUijm9CJOL')
     if 'stop' in message.content.lower():
         await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-angry-enough-thats-the-limit-S7FIMGqbQX9nxsoJjf')
-    if 'what does abi say to nitishna' in message.content.lower():
-        await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-kiss-flirt-naughty-lTBAPZzEVx4EtSmq2X')
     if 'nitishna' in message.content.lower() or 'prachi' in message.content.lower():
         await message.channel.send('https://giphy.com/gifs/bypriyashah-alia-bhatt-the-kapil-sharma-show-3ohfFjT9c0GPfGkZ0I')
     
