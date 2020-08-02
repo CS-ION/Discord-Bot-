@@ -34,18 +34,39 @@ async def on_message(message):
     
     await bot.process_commands(message)
 
-@bot.command()
-async def join(ctx):
-    try:
-            await ctx.message.author.voice.channel.connect()
-    except:
-            pass
+song_list = []
 
 @bot.command()
-async def play(ctx,*args):
+async def seru(ctx):
+    global song_list
+    song_list = []
+    try:
+        await ctx.message.author.voice.channel.connect()
+    except:
+        await ctx.send('abbe mandbuddhi, VC to join karo')
+
+@bot.command()
+async def kalikukka(ctx,*args):
+
+    global song_list
+    
     if  ctx.message.author.voice!=None and bot.voice_clients!=[]:
 
-        song = ' '.join(args)
+        if ctx.message.guild.voice_client.is_playing()==True:
+            song_list.append(' '.join(args))
+            await ctx.send(' '.join(args) + 'ko line me lagwa diye he')
+            return
+
+        for file in os.listdir():
+            if file.endswith('.mp3'):
+                os.remove(file)
+
+        if song_list == []:
+            song = ' '.join(args)
+        else :
+            song = song_list[0]
+            song_list.pop(0)
+            
         results = YoutubeSearch(song, max_results=1).to_dict()
         for I in results:
             url = 'https://www.youtube.com'+ I['url_suffix']
@@ -69,21 +90,38 @@ async def play(ctx,*args):
                 ctx.message.guild.voice_client.play(discord.FFmpegPCMAudio(file))
 
 @bot.command()
-async def pause(ctx):
-        ctx.message.guild.voice_client.pause()        
+async def niruthu(ctx):
+    if ctx.message.author.voice == None:
+        await ctx.send('abbe mandbuddhi, VC to join karo')
+        return
+    ctx.message.guild.voice_client.pause()
+    await ctx.send('kya yaar beech me rok kar poora maza kharab kar diye')
+    
 @bot.command()
-async def resume(ctx):
-        ctx.message.guild.voice_client.resume()
+async def thodurum(ctx):
+    if ctx.message.author.voice == None:
+        await ctx.send('abbe mandbuddhi, VC to join karo')
+        return
+    ctx.message.guild.voice_client.resume()
+    await ctx.send('je hui na baat ab maze karo')
+
 @bot.command()
-async def skip(ctx):
-        ctx.message.guild.voice_client.stop()
+async def poda_patti(ctx):
+    if ctx.message.author.voice == None:
+        await ctx.send('abbe mandbuddhi, VC to join karo')
+        return
+    ctx.message.guild.voice_client.stop()
+    await ctx.send('kya yaar, itne badhiya gane ko hata diya')
 
 @bot.command()
 async def poda(ctx):
+    global song_list
     for x in bot.voice_clients:
-        print(bot.voice_clients)
         if(x.guild == ctx.message.guild):
+            song_list = []
             return await x.disconnect()
+    if bot.voice_clients==[]:
+        await ctx.send('abbe hum gaye hi kab jo tum humko nikaloge')
 
 @bot.command()
 async def b(ctx):
@@ -135,6 +173,9 @@ async def roast(ctx,arg):
 async def dhanyavaad(ctx):
     if ctx.message.author.id == 518342269955342347 :
         await ctx.send('aate hai')
+        for file in os.listdir():
+            if file.endswith('.mp3'):
+                os.remove(file)
         await ctx.bot.logout()
     else :
         await ctx.send('bhediyon me itna dam nahi ki sheron ko bhaga sake')
