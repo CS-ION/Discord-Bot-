@@ -14,11 +14,23 @@ async def on_message(message):
     if message.author == bot.user:
         return
     
-    load_dotenv()
+    if 'lol' or 'lmao' in message.content.lower():
+        await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-lol-lmao-rofl-XHpoWfKOXwldWj6AqD')
+    if 'no' or 'never' in message.content.lower():
+        await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-no-nope-never-JPgrKbOaPUijm9CJOL')
+    if 'stop' in message.content.lower():
+        await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-angry-enough-thats-the-limit-S7FIMGqbQX9nxsoJjf')
+    if 'what does abishai say to nitishna' in message.content.lower():
+        await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-kiss-flirt-naughty-lTBAPZzEVx4EtSmq2X')
+    if 'nitishna' or 'prachi' in message.content.lower():
+        await message.channel.send('https://giphy.com/gifs/bypriyashah-alia-bhatt-the-kapil-sharma-show-3ohfFjT9c0GPfGkZ0I')
+    
+    '''
     if message.author.id == int(os.getenv('ramanna')):
         message.author.edit(nick='UMAGA PODD')
     if message.author.id == int(os.getenv('jerin')):
         message.author.edit(nick='UMAGA BATGIRL')
+    '''
     
     await bot.process_commands(message)
 
