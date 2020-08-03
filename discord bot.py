@@ -9,25 +9,24 @@ from youtube_search import YoutubeSearch
 bot = commands.Bot(command_prefix = '.')
 
 @bot.event
+
+
+@bot.event
 async def on_message(message):
 
     if message.author == bot.user:
         return
     
+    '''
     if 'lol' in message.content.lower() or 'lmao' in message.content.lower():
         await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-lol-lmao-rofl-XHpoWfKOXwldWj6AqD')
-    if 'no' in message.content.lower() or 'never' in message.content.lower():
-        await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-no-nope-never-JPgrKbOaPUijm9CJOL')
-    if 'stop' in message.content.lower():
-        await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-angry-enough-thats-the-limit-S7FIMGqbQX9nxsoJjf')
     if 'nitishna' in message.content.lower() or 'prachi' in message.content.lower():
         await message.channel.send('https://giphy.com/gifs/bypriyashah-alia-bhatt-the-kapil-sharma-show-3ohfFjT9c0GPfGkZ0I')
-    
-    '''
+        
     if message.author.id == int(os.getenv('ramanna')):
-        message.author.edit(nick='UMAGA PODD')
+        await message.author.edit(nick='UMAGA MO-LOL-ITY')
     if message.author.id == int(os.getenv('jerin')):
-        message.author.edit(nick='UMAGA BATGIRL')
+        await message.author.edit(nick='UMAGA BATGIRL')
     '''
     
     await bot.process_commands(message)
@@ -51,8 +50,9 @@ async def kalikukka(ctx,*args):
     if  ctx.message.author.voice!=None and bot.voice_clients!=[]:
 
         if ctx.message.guild.voice_client.is_playing()==True:
-            song_list.append(' '.join(args))
-            await ctx.send(' '.join(args) + 'ko line me lagwa diye he')
+            song = ' '.join(args)
+            song_list.append(song)
+            await ctx.send(f'**{song}** ko line me lagwa diye he')
             return
 
         for file in os.listdir():
@@ -64,6 +64,7 @@ async def kalikukka(ctx,*args):
         else :
             song = song_list[0]
             song_list.pop(0)
+            song_list.append(' '.join(args))
             
         results = YoutubeSearch(song, max_results=1).to_dict()
         for I in results:
@@ -79,14 +80,37 @@ async def kalikukka(ctx,*args):
         }
 
         ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-        await ctx.send('ruko burbak gane ko download hone do')
+        await ctx.send(f'ruko burbak **{song}** ko download hone do')
         ytdl.download([url])
-        await ctx.send('ab suno gana aur apna manoranjan karo')
+        await ctx.send(f'ab suno **{song}** aur apna manoranjan karo')
 
         for file in os.listdir():
             if file.endswith('.mp3'):
                 ctx.message.guild.voice_client.play(discord.FFmpegPCMAudio(file))
+@bot.command()
+async def line(ctx):
+    global song_list
+    if song_list == []:
+        await ctx.send('jab koi line he hi nahi to kya dekho ge be')
+        return
+    c=1
+    for I in song_list:
+        await ctx.send(f'**{c})** , **{I}**')
+        c+=1
 
+@bot.command()
+async def hatt(ctx,arg):
+    global song_list
+    if song_list == []:
+        await ctx.send('jab koi line he hi nahi to kya hatao ge be')
+        return
+    index = int(arg) -  1
+    try :
+        await ctx.send(f'kya yaar, **{song_list[index]}** humse hi hatwana tha')
+        song_list.pop(index)
+    except:
+        await ctx.send('ek minute... ye kya, tumhara to number hi line ke bahar he')
+    
 @bot.command()
 async def niruthu(ctx):
     if ctx.message.author.voice == None:
@@ -164,7 +188,7 @@ async def roast(ctx,arg):
     'ujjwal' : 'naam he mera ujjwal babu aur me lollipop lagelu',
     'vineet' : 'even mcdonalds had to shut down their farms coz you ate all their poultry'
     }
-    
+
     await ctx.send(roasts.get(arg.lower(),"kiska naam diya hai <:abeysaale:731486907208433724>"))
 
 @bot.command()
@@ -181,3 +205,5 @@ async def dhanyavaad(ctx):
 load_dotenv()
 token=os.getenv('DISCORD_TOKEN')
 bot.run(token)
+
+
