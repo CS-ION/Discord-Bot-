@@ -9,7 +9,12 @@ from youtube_search import YoutubeSearch
 bot = commands.Bot(command_prefix = '.')
 
 @bot.event
-
+async def on_ready():
+    print(f"{bot.user} has connected to discord...\n")
+    
+    for file in os.listdir():#cleanup
+        if file.endswith('.mp3'):
+            os.remove(file)
 
 @bot.event
 async def on_message(message):
@@ -33,8 +38,8 @@ async def on_message(message):
 
 song_list = []
 
-@bot.command()
-async def seru(ctx):
+@bot.command(aliases=['seru'])
+async def join(ctx):
     global song_list
     song_list = []
     try:
@@ -42,8 +47,9 @@ async def seru(ctx):
     except:
         await ctx.send('abbe mandbuddhi, VC to join karo')
 
-@bot.command()
-async def kalikukka(ctx,*args):
+
+@bot.command(aliases=['kalikukka','p'])
+async def play(ctx,*args):
 
     global song_list
     
@@ -52,7 +58,7 @@ async def kalikukka(ctx,*args):
         if ctx.message.guild.voice_client.is_playing()==True:
             song = ' '.join(args)
             song_list.append(song)
-            await ctx.send(f'**{song}** ko line me lagwa diye he')
+            await ctx.send(f'**`{song}` ko line me lagwa diye he**')
             return
 
         for file in os.listdir():
@@ -80,63 +86,66 @@ async def kalikukka(ctx,*args):
         }
 
         ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-        await ctx.send(f'ruko burbak **{song}** ko download hone do')
+        await ctx.send(f'*ruko burbak `{song}` ko download hone do*')
         ytdl.download([url])
-        await ctx.send(f'ab suno **{song}** aur apna manoranjan karo')
-
+        await ctx.send(f'**ab suno `{song}` aur apna manoranjan karo**')
+        #add embed 
         for file in os.listdir():
             if file.endswith('.mp3'):
                 ctx.message.guild.voice_client.play(discord.FFmpegPCMAudio(file))
-@bot.command()
-async def line(ctx):
+
+
+@bot.command(aliases=['line','q'])
+async def queue(ctx):
     global song_list
     if song_list == []:
         await ctx.send('jab koi line he hi nahi to kya dekho ge be')
         return
-    c=1
-    for I in song_list:
-        await ctx.send(f'**{c})** , **{I}**')
-        c+=1
+    
+    for i,s in enumerate(song_list):
+        await ctx.send(f'*{i+1})*: **`{s}`**')
+        
 
-@bot.command()
-async def hatt(ctx,arg):
+@bot.command(aliases = ['hatt','r'])
+async def remove(ctx,position : int):
     global song_list
     if song_list == []:
         await ctx.send('jab koi line he hi nahi to kya hatao ge be')
         return
-    index = int(arg) -  1
+
     try :
-        await ctx.send(f'kya yaar, **{song_list[index]}** humse hi hatwana tha')
-        song_list.pop(index)
+        await ctx.send(f'kya yaar, `{song_list[position-1]}` humse hi hatwana tha') #yeh gunda ko even i wanted to hatt
+        song_list.pop(position-1)
     except:
         await ctx.send('ek minute... ye kya, tumhara to number hi line ke bahar he')
     
-@bot.command()
-async def niruthu(ctx):
+
+@bot.command(aliases = ['niruthu'])
+async def pause(ctx):
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
     ctx.message.guild.voice_client.pause()
     await ctx.send('kya yaar beech me rok kar poora maza kharab kar diye')
     
-@bot.command()
-async def thodurum(ctx):
+@bot.command(aliases = ['thodurum'])
+async def resume(ctx):
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
     ctx.message.guild.voice_client.resume()
     await ctx.send('je hui na baat ab maze karo')
 
-@bot.command()
-async def poda_patti(ctx):
+@bot.command(aliases = ['poda_patti','s'])
+async def skip(ctx):
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
     ctx.message.guild.voice_client.stop()
     await ctx.send('kya yaar, itne badhiya gane ko hata diya')
 
-@bot.command()
-async def poda(ctx):
+@bot.command(aliases = ['poda','d'])
+async def disconnect(ctx):
     global song_list
     for x in bot.voice_clients:
         if(x.guild == ctx.message.guild):
