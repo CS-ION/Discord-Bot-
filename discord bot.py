@@ -93,7 +93,7 @@ def download(voice_client):
             
         for file in os.listdir():
             if file.endswith('.mp3'):
-                voice_client.play(discord.FFmpegPCMAudio(file),after =lambda e: asyncio.run(download(voice_client)))
+                voice_client.play(discord.FFmpegPCMAudio(file),after =lambda e: download(voice_client))
         buffer_list.clear()
 
     else:
