@@ -4,7 +4,8 @@ from googlesearch import search
 from dotenv import load_dotenv
 import os
 import youtube_dl
-from youtube_search import YoutubeSearch
+from youtubesearchpython import SearchVideos
+import asyncio
 
 bot = commands.Bot(command_prefix = '.')
 
@@ -12,112 +13,123 @@ bot = commands.Bot(command_prefix = '.')
 async def on_ready():
     print(f"{bot.user} has connected to discord...\n")
     
-    for file in os.listdir():#cleanup
+    for file in os.listdir():
         if file.endswith('.mp3'):
             os.remove(file)
 
-@bot.event
-async def on_message(message):
-
-    if message.author == bot.user:
-        return
-    
-    '''
-    if 'lol' in message.content.lower() or 'lmao' in message.content.lower():
-        await message.channel.send('https://giphy.com/gifs/SalmanKhanFilms-lol-lmao-rofl-XHpoWfKOXwldWj6AqD')
-    if 'nitishna' in message.content.lower() or 'prachi' in message.content.lower():
-        await message.channel.send('https://giphy.com/gifs/bypriyashah-alia-bhatt-the-kapil-sharma-show-3ohfFjT9c0GPfGkZ0I')
-        
-    if message.author.id == int(os.getenv('ramanna')):
-        await message.author.edit(nick='UMAGA MO-LOL-ITY')
-    if message.author.id == int(os.getenv('jerin')):
-        await message.author.edit(nick='UMAGA BATGIRL')
-    '''
-    
-    await bot.process_commands(message)
-
 song_list = []
+buffer_list = []
 
 @bot.command(aliases=['seru'])
 async def join(ctx):
     global song_list
     song_list = []
+    if bot.voice_clients!=[]:
+        await ctx.send('abbe hum tumhare baap he, tumhare kehne se pehle aa gaye')
+        return
     try:
         await ctx.message.author.voice.channel.connect()
     except:
         await ctx.send('abbe mandbuddhi, VC to join karo')
 
-
 @bot.command(aliases=['kalikukka','p'])
 async def play(ctx,*args):
-
-    global song_list
     
     if  ctx.message.author.voice!=None and bot.voice_clients!=[]:
-
-        if ctx.message.guild.voice_client.is_playing()==True:
-            song = ' '.join(args)
-            song_list.append(song)
-            await ctx.send(f'**`{song}` ko line me lagwa diye he**')
-            return
-
-        for file in os.listdir():
-            if file.endswith('.mp3'):
-                os.remove(file)
-
-        if song_list == []:
-            song = ' '.join(args)
-        else :
-            song = song_list[0]
-            song_list.pop(0)
-            song_list.append(' '.join(args))
-            
-        results = YoutubeSearch(song, max_results=1).to_dict()
-        for I in results:
-            url = 'https://www.youtube.com'+ I['url_suffix']
         
+        global song_list
+        global buffer_list
+        songa = ' '.join(args)
+        song_list.append(songa)
+        buffer_list.append(songa)
+
+        await ctx.send(f'**`{songa}` ko line me lagwa diye he**')
+
+        if ctx.message.guild.voice_client.is_playing()==False and buffer_list!=[]:
+            download(ctx.message.guild.voice_client)
+        else:
+            return
+    else:
+        await ctx.send('abbe mandbuddhi, VC to join karo')       
+
+def download(voice_client):
+
+    global song_list
+    global buffer_list
+    
+    try:
+        song = song_list[0]
+    except:
+        return
+    song_list.pop(0)
+
+    for file in os.listdir():
+                if file.endswith('.mp3'):
+                    os.remove(file)
+
+    results = SearchVideos(song,offset=1,mode='dict',max_results=1)
+    x = results.result()
+    for I in x['search_result']:
+        songa = I['title']
+
+        #await ctx.send(f'*ruko burbak `{songa}` ko download hone do*')
+
         ytdl_format_options = {
-            'format' : 'bestaudio/best' ,
-            'postprocessors' : [{
-                'key' : 'FFmpegExtractAudio' ,
-                'preferredcodec' : 'mp3' ,
-                'preferredquality' : '192' ,
-             }]
-        }
+                'format' : 'bestaudio/best' ,
+                'postprocessors' : [{
+                       'key' : 'FFmpegExtractAudio' ,
+                       'preferredcodec' : 'mp3' ,
+                       'preferredquality' : '192' ,
+                       }]
+                }
 
         ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-        await ctx.send(f'*ruko burbak `{song}` ko download hone do*')
-        ytdl.download([url])
-        await ctx.send(f'**ab suno `{song}` aur apna manoranjan karo**')
-        #add embed 
+        ytdl.download([I['link']])
+
+    #await ctx.send(f'*ab suno`{songa}` aur apna manorajan karo*')
+
+    if voice_client.is_playing()==False:
+            
         for file in os.listdir():
             if file.endswith('.mp3'):
-                ctx.message.guild.voice_client.play(discord.FFmpegPCMAudio(file))
+                voice_client.play(discord.FFmpegPCMAudio(file),after =lambda e: asyncio.run(download(voice_client)))
+        buffer_list.clear()
 
-
+    else:
+        return
+    
+        '''
+        audio = ytdl.extract_info(I['link'],download = False)
+        streamable_url = audio['formats'][0]['url']
+        ctx.message.guild.voice_client.play(discord.FFmpegPCMAudio(streamable_url))
+        '''
+    
 @bot.command(aliases=['line','q'])
 async def queue(ctx):
     global song_list
-    if song_list == []:
-        await ctx.send('jab koi line he hi nahi to kya dekho ge be')
-        return
-    
-    for i,s in enumerate(song_list):
-        await ctx.send(f'*{i+1})*: **`{s}`**')
+    if  ctx.message.author.voice!=None:
+        if song_list == []:
+            await ctx.send('jab koi line he hi nahi to kya dekho ge be')
+            return
+        for i,s in enumerate(song_list):
+            await ctx.send(f'*{i+1})*: **`{s}`**')
+    else:
+        await ctx.send('abbe mandbuddhi, VC to join karo')
         
-
 @bot.command(aliases = ['hatt','r'])
 async def remove(ctx,position : int):
     global song_list
-    if song_list == []:
-        await ctx.send('jab koi line he hi nahi to kya hatao ge be')
-        return
-
-    try :
-        await ctx.send(f'kya yaar, `{song_list[position-1]}` humse hi hatwana tha') #yeh gunda ko even i wanted to hatt
-        song_list.pop(position-1)
-    except:
-        await ctx.send('ek minute... ye kya, tumhara to number hi line ke bahar he')
+    if  ctx.message.author.voice!=None:
+        if song_list == []:
+            await ctx.send('jab koi line he hi nahi to kya hatao ge be')
+            return
+        try :
+            await ctx.send(f'kya yaar, `{song_list[position-1]}` humse hi hatwana tha')
+            song_list.pop(position-1)
+        except:
+            await ctx.send('ek minute... ye kya, tumhara to number hi line ke bahar he')
+    else:
+        await ctx.send('abbe mandbuddhi, VC to join karo')
     
 
 @bot.command(aliases = ['niruthu'])
@@ -143,7 +155,7 @@ async def skip(ctx):
         return
     ctx.message.guild.voice_client.stop()
     await ctx.send('kya yaar, itne badhiya gane ko hata diya')
-
+    
 @bot.command(aliases = ['poda','d'])
 async def disconnect(ctx):
     global song_list
@@ -155,8 +167,13 @@ async def disconnect(ctx):
         await ctx.send('abbe hum gaye hi kab jo tum humko nikaloge')
 
 @bot.command()
-async def b(ctx):
-    await ctx.message.channel.purge(limit=2)
+async def kick(ctx, member : discord.Member):
+    await member.kick(reason = None)
+    await ctx.send(f'{member.mention} ko dhakke maar ke nikal diye he be')
+
+@bot.command()
+async def b(ctx , no : int):
+    await ctx.message.channel.purge(limit=no)
     
 @bot.command()
 async def member_count(ctx):
@@ -168,10 +185,22 @@ async def all_members(ctx):
         await ctx.send(I.name)
 
 @bot.command()
+async def change(ctx, member : discord.Member, *args):
+    new = ' '.join(args)
+    await member.edit(nick = new)
+
+@bot.command()
 async def avatar(ctx, user: discord.User = None):
     if user==None:
         user = ctx.message.author
     await ctx.send(user.avatar_url_as())
+
+@bot.command()
+async def mobile(ctx , member : discord.Member):
+    if member.is_on_mobile() == True :
+        await ctx.send('kaun sa mobilewa pe ho be , nokia ?')
+    elif member.is_on_mobile() == False:
+        await ctx.send('PC use karta hai bade aadmi kahin ka')
     
 @bot.command()
 async def Q(ctx,*args):
@@ -198,7 +227,20 @@ async def roast(ctx,arg):
     'vineet' : 'even mcdonalds had to shut down their farms coz you ate all their poultry'
     }
 
-    await ctx.send(roasts.get(arg.lower(),"kiska naam diya hai <:abeysaale:731486907208433724>"))
+    await ctx.send(roasts.get(arg.lower(),"kiska naam diya hai <:abeysaale:731486907208433724>"),tts = True)
+
+@bot.command()
+async def proifucts(ctx):
+    prefets = ['Manav Great','TSAR','Fractals Are Bae']
+    for I in prefects:
+        await ctx.send(I)
+@bot.command()
+async def girlfriend(ctx, arg):
+    gfs = {
+        'salman' : 'https://akm-img-a-in.tosshub.com/indiatoday/images/story/201310/salman-kat-and-ash_story-size_660_100813113758.jpg'
+    }
+
+    await ctx.send(gfs.get(arg.lower(), "kiski girlfriend pooch rahe ho <:abeysaale:731486907208433724>"))
 
 @bot.command()
 async def dhanyavaad(ctx):
@@ -214,5 +256,6 @@ async def dhanyavaad(ctx):
 load_dotenv()
 token=os.getenv('DISCORD_TOKEN')
 bot.run(token)
+
 
 
