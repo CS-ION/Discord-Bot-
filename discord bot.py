@@ -18,14 +18,13 @@ async def on_ready():
         if file.endswith('.mp3'):
             os.remove(file)
 
-song_list = []
-buffer_list = []
-
+song_list = {'674567305291890698':[],'735195524122017923':[],'753491412258914395':[]}
+        
 @bot.command(aliases=['seru'])
 async def join(ctx):
     global song_list
-    song_list = []
-    if bot.voice_clients!=[]:
+    song_list[ctx.guild.id] = []
+    if ctx.guild.voice_client in bot.voice_clients:
         await ctx.send('abbe hum tumhare baap he, tumhare kehne se pehle aa gaye')
         return
     try:
@@ -36,33 +35,31 @@ async def join(ctx):
 @bot.command(aliases=['kalikukka','p'])
 async def play(ctx,*args):
     
-    if  ctx.message.author.voice!=None and bot.voice_clients!=[]:
+    if  ctx.message.author.voice!=None and (ctx.guild.voice_client in bot.voice_clients):
         
         global song_list
-        global buffer_list
         songa = ' '.join(args)
-        song_list.append(songa)
-        buffer_list.append(songa)
+        song_list[ctx.guild.id].append(songa)
 
         await ctx.send(f'**`{songa}` ko line me lagwa diye he**')
 
-        if ctx.message.guild.voice_client.is_playing()==False and buffer_list!=[]:
-            download(ctx.message.guild.voice_client)
+        if ctx.message.guild.voice_client.is_playing()==False and 'buffer_list[ctx.guild.id] != []':
+            download(ctx.message.guild.voice_client,ctx.guild.id)
         else:
             return
     else:
         await ctx.send('abbe mandbuddhi, VC to join karo')       
 
-def download(voice_client):
+def download(voice_client,server_id):
 
     global song_list
     global buffer_list
     
     try:
-        song = song_list[0]
+        song = song_list[server_id][0]
     except:
         return
-    song_list.pop(0)
+    song_list[server_id].pop(0)
 
     for file in os.listdir():
                 if file.endswith('.mp3'):
@@ -85,34 +82,33 @@ def download(voice_client):
                 }
 
         ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-        ytdl.download([I['link']])
+        #ytdl.download([I['link']])
 
     #await ctx.send(f'*ab suno`{songa}` aur apna manorajan karo*')
 
     if voice_client.is_playing()==False:
-            
+
+        audio = ytdl.extract_info(I['link'],download = False)
+        streamable_url = audio['formats'][0]['url']
+        before_options = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+        voice_client.play(discord.FFmpegPCMAudio(streamable_url,before_options = before_options),after =lambda e: download(voice_client,server_id))
+    
+       
         for file in os.listdir():
             if file.endswith('.mp3'):
-                voice_client.play(discord.FFmpegPCMAudio(file),after =lambda e: download(voice_client))
-        buffer_list.clear()
+                voice_client.play(discord.FFmpegPCMAudio(file),after =lambda e: download(voice_client,server_id))
 
     else:
         return
-    
-        '''
-        audio = ytdl.extract_info(I['link'],download = False)
-        streamable_url = audio['formats'][0]['url']
-        ctx.message.guild.voice_client.play(discord.FFmpegPCMAudio(streamable_url))
-        '''
     
 @bot.command(aliases=['line','q'])
 async def queue(ctx):
     global song_list
     if  ctx.message.author.voice!=None:
-        if song_list == []:
+        if song_list[ctx.guild.id] == []:
             await ctx.send('jab koi line he hi nahi to kya dekho ge be')
             return
-        for i,s in enumerate(song_list):
+        for i,s in enumerate(song_list[ctx.guild.id]):
             await ctx.send(f'*{i+1})*: **`{s}`**')
     else:
         await ctx.send('abbe mandbuddhi, VC to join karo')
@@ -121,12 +117,12 @@ async def queue(ctx):
 async def remove(ctx,position : int):
     global song_list
     if  ctx.message.author.voice!=None:
-        if song_list == []:
+        if song_list[ctx.guild.id] == []:
             await ctx.send('jab koi line he hi nahi to kya hatao ge be')
             return
         try :
             await ctx.send(f'kya yaar, `{song_list[position-1]}` humse hi hatwana tha')
-            song_list.pop(position-1)
+            song_list[ctx.guild.id].pop(position-1)
         except:
             await ctx.send('ek minute... ye kya, tumhara to number hi line ke bahar he')
     else:
@@ -162,7 +158,7 @@ async def disconnect(ctx):
     global song_list
     for x in bot.voice_clients:
         if(x.guild == ctx.message.guild):
-            song_list = []
+            song_list[ctx.guild.id]=[]
             return await x.disconnect()
     if bot.voice_clients==[]:
         await ctx.send('abbe hum gaye hi kab jo tum humko nikaloge')
@@ -178,11 +174,11 @@ async def b(ctx , no : int):
     
 @bot.command()
 async def member_count(ctx):
-    await ctx.send(ctx.message.guild.member_count)
+        await ctx.send(ctx.message.guild.member_count)
 
 @bot.command()
 async def all_members(ctx):
-    for I in bot.get_all_members():
+    for I in ctx.guild.get_all_members():
         await ctx.send(I.name)
 
 @bot.command()
@@ -291,6 +287,3 @@ async def dhanyavaad(ctx):
 load_dotenv()
 token=os.getenv('DISCORD_TOKEN')
 bot.run(token)
-
-
-
