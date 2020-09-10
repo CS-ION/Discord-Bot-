@@ -178,7 +178,7 @@ async def member_count(ctx):
 
 @bot.command()
 async def all_members(ctx):
-    for I in ctx.guild.get_all_members():
+    for I in bot.get_all_members():
         await ctx.send(I.name)
 
 @bot.command()
