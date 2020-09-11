@@ -18,7 +18,8 @@ async def on_ready():
         if file.endswith('.mp3'):
             os.remove(file)
 
-song_list = {'674567305291890698':[],'735195524122017923':[],'753491412258914395':[]}
+load_dotenv()
+song_list = {os.getenv('server1'):[],os.getenv('server2'):[],os.getenv('server3'):[]}
         
 @bot.command(aliases=['seru'])
 async def join(ctx):
@@ -284,6 +285,5 @@ async def dhanyavaad(ctx):
     else :
         await ctx.send('bhediyon me itna dam nahi ki sheron ko bhaga sake')
 
-load_dotenv()
 token=os.getenv('DISCORD_TOKEN')
 bot.run(token)
