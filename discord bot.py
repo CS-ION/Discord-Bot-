@@ -19,7 +19,7 @@ async def on_ready():
             os.remove(file)
 
 load_dotenv()
-song_list = {os.getenv('server1'):[],os.getenv('server2'):[],os.getenv('server3'):[]}
+song_list = {os.getenv('server1'):[],os.getenv('server2'):[],os.getenv('server3'):[],os.getenv('server4'):[]}}
         
 @bot.command(aliases=['seru'])
 async def join(ctx):
@@ -54,7 +54,6 @@ async def play(ctx,*args):
 def download(voice_client,server_id):
 
     global song_list
-    global buffer_list
     
     try:
         song = song_list[server_id][0]
@@ -285,5 +284,5 @@ async def dhanyavaad(ctx):
     else :
         await ctx.send('bhediyon me itna dam nahi ki sheron ko bhaga sake')
 
-token=os.getenv('DISCORD_TOKEN')
+token=os.getenv('token')
 bot.run(token)
