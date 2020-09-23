@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 import os
 import youtube_dl
 from youtubesearchpython import SearchVideos
-import asyncio
 import random
+import sports
+import pycricbuzz
 
 bot = commands.Bot(command_prefix = '.')
 
@@ -274,6 +275,78 @@ async def girlfriend(ctx, arg):
     await ctx.send(gfs.get(arg.lower(), "kiski girlfriend pooch rahe ho <:abeysaale:731486907208433724>"))
 
 @bot.command()
+async def ipl(ctx,*args):
+    L = ' '.join(args)
+    match = sports.get_match(sports.CRICKET, L[0], L[1])
+    if match.match_time == 'Match Finished':
+        await ctx.send('abe shuru to hone do')
+        return
+    embed = discord.Embed(title='IPL 2020', colour=discord.Colour.gold())
+    embed.add_field(name=match.away_team , value=match.away_score , inline = False)
+    embed.add_field(name=match.home_team , value=match.home_score , inline = False)
+    await ctx.send(embed = embed)
+
+@bot.command()
+async def current_score(ctx):   
+    mid = match_id()
+    match = Cricbuzz()
+    details = match.livescore(mid)
+
+    embed1 = discord.Embed(title=f"Current Batting Team : {details['batting']['team']}", colour=discord.Colour.red())
+
+    embed1.add_field(
+            name = f"Batsman Name : {details['batting']['batsman'][0]['name']}",
+            value = f"Runs Scored : {details['batting']['batsman'][0]['runs']}\n"
+            f"Balls Faced : {details['batting']['batsman'][0]['balls']}\n"
+            f"Fours Hit : {details['batting']['batsman'][0]['fours']}\n"
+            f"Sixes Hit : {details['batting']['batsman'][0]['six']}\n",
+            inline = False)
+    
+    embed1.add_field(
+            name = f"Batsman Name : {details['batting']['batsman'][1]['name']}",
+            value = f"Runs Scored : {details['batting']['batsman'][1]['runs']}\n"
+            f"Balls Faced : {details['batting']['batsman'][1]['balls']}\n"
+            f"Fours Hit : {details['batting']['batsman'][1]['fours']}\n"
+            f"Sixes Hit : {details['batting']['batsman'][1]['six']}\n",
+            inline = False)
+    
+    await ctx.send(embed = embed1)
+
+    embed2 = discord.Embed(title=f"Current Bowling Team : {details['bowling']['team']}", colour=discord.Colour.green())
+    
+    embed2.add_field(
+        name = f"Bowler Name : {details['bowling']['bowler'][0]['name']}",
+        value = f"Overs Done : {details['bowling']['bowler'][0]['overs']}\n"
+        f"Runs Given : {details['bowling']['bowler'][0]['runs']}\n"
+        f"Wickets Taken : {details['bowling']['bowler'][0]['wickets']}",
+        inline = False)
+    
+    await ctx.send(embed = embed2)    
+
+def match_id():
+    c = Cricbuzz()
+    matches = c.matches()
+    for I in matches:
+        if I['srs']=='Indian Premier League 2020':
+            return I['id']
+
+@bot.command()
+async def teams(ctx):
+    c = Cricbuzz()
+    matches = c.matches()
+    for I in matches:
+        if I['srs']=='Indian Premier League 2020':
+            embed1 = discord.Embed(title= I['team1']['name'], colour=discord.Colour.blue())
+            for X,J in enumerate(I['team1']['squad']):
+                embed1.add_field(name = J,value = f'{X+1}',inline = False)
+            embed2 = discord.Embed(title= I['team2']['name'], colour=discord.Colour.gold())
+            for X,J in enumerate(I['team2']['squad']):
+                embed2.add_field(name = J,value = f'{X+1}',inline = False)
+            await ctx.send(embed = embed1)
+            await ctx.send(embed = embed2)
+            return 
+
+@bot.command()
 async def dhanyavaad(ctx):
     if ctx.message.author.id == 518342269955342347 :
         await ctx.send('aate hai')
@@ -286,3 +359,5 @@ async def dhanyavaad(ctx):
 
 token=os.getenv('token')
 bot.run(token)
+
+
