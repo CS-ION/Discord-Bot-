@@ -273,11 +273,13 @@ async def girlfriend(ctx, arg):
     }
 
     await ctx.send(gfs.get(arg.lower(), "kiski girlfriend pooch rahe ho <:abeysaale:731486907208433724>"))
-
+    
 @bot.command()
 async def ipl(ctx,*args):
-    L = ' '.join(args)
-    match = sports.get_match(sports.CRICKET, L[0], L[1])
+    try:
+        match = sports.get_match(sports.CRICKET, args[0], args[2])
+    except:
+        await ctx.send('abbe kya type kiya he be')
     if match.match_time == 'Match Finished':
         await ctx.send('abe shuru to hone do')
         return
@@ -333,18 +335,73 @@ def match_id():
 @bot.command()
 async def teams(ctx):
     c = Cricbuzz()
-    matches = c.matches()
-    for I in matches:
-        if I['srs']=='Indian Premier League 2020':
-            embed1 = discord.Embed(title= I['team1']['name'], colour=discord.Colour.blue())
-            for X,J in enumerate(I['team1']['squad']):
-                embed1.add_field(name = J,value = f'{X+1}',inline = False)
-            embed2 = discord.Embed(title= I['team2']['name'], colour=discord.Colour.gold())
-            for X,J in enumerate(I['team2']['squad']):
-                embed2.add_field(name = J,value = f'{X+1}',inline = False)
-            await ctx.send(embed = embed1)
-            await ctx.send(embed = embed2)
-            return 
+    I = c.matchinfo(match_id())
+    embed1 = discord.Embed(title= I['team1']['name'], colour=discord.Colour.blue())
+    for X,J in enumerate(I['team1']['squad']):
+        embed1.add_field(name = J,value = f'{X+1}',inline = False)
+    embed2 = discord.Embed(title= I['team2']['name'], colour=discord.Colour.gold())
+    for X,J in enumerate(I['team2']['squad']):
+        embed2.add_field(name = J,value = f'{X+1}',inline = False)
+    await ctx.send(embed = embed1)
+    await ctx.send(embed = embed2) 
+
+@bot.command()
+async def status(ctx):
+    c = Cricbuzz()
+    match = c.matchinfo(match_id())
+    await ctx.send(match['status'])
+
+@bot.command()
+async def venue(ctx):
+    c = Cricbuzz()
+    match = c.matchinfo(match_id())
+    await ctx.send(match["venue_name"])
+    await ctx.send(match['venue_location'])
+    
+@bot.command()
+async def score_card(ctx):
+    c = Cricbuzz()
+    scorecard = c.scorecard(match_id())['scorecard'][0]
+
+    embed1 = discord.Embed(title = f"Batting Team : {scorecard['batteam']}" , colour=discord.Colour.blue())
+    embed1.description = f"Score {scorecard['runs']}/{scorecard['wickets']}, Overs {scorecard['overs']}"
+    for I in scorecard['batcard']:
+        embed1.add_field(
+                        name=I['name'],
+                        value=f"Runs{I['runs']}\n"
+                        f"Balls Faced {I['balls']}\n"
+                        f"Fours {I['fours']}\n"
+                        f"Sixes {I['six']}\n"
+                        f"{I['dismissal']}",
+                        inline = False)
+
+    embed2 = discord.Embed(title = f"Bowling Team : {scorecard['bowlteam']}" , colour=discord.Colour.gold())
+    for I in scorecard['bowlcard']:
+        embed2.add_field(
+                        name=I['name'],
+                        value=f"Overs : {I['overs']}\n"
+                        f"Maidens : {I['maidens']}\n"
+                        f"Runs Given : {I['runs']}\n"
+                        f"Wickets Taken : {I['wickets']}\n"
+                        f"wides : {I['wides']}\n"
+                        f"no balls : {I['nballs']}",
+                        inline = False)
+    
+    await ctx.send(embed = embed1)
+    await ctx.send(embed = embed2)
+
+@bot.command()
+async def football(ctx,*args):
+    try:
+        match = sports.get_match(sports.SOCCER, args[0], args[2])
+    except:
+        await ctx.send('abe shuru to hone do')
+        return
+    embed = discord.Embed(title = ' '.join(args).upper(), colour=discord.Colour.blurple()) 
+    embed.description = f'{match.league}'
+    embed.add_field( name = f'{match.away_team}', value =  f'{match.away_score}')
+    embed.add_field( name = f'{match.home_team}' , value = f'{match.home_score}')
+    await ctx.send(embed = embed)
 
 @bot.command()
 async def dhanyavaad(ctx):
