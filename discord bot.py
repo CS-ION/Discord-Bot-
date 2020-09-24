@@ -45,7 +45,7 @@ async def play(ctx,*args):
 
         await ctx.send(f'**`{songa}` ko line me lagwa diye he**')
 
-        if ctx.message.guild.voice_client.is_playing()==False and 'buffer_list[ctx.guild.id] != []':
+        if ctx.message.guild.voice_client.is_playing()==False:
             download(ctx.message.guild.voice_client,ctx.guild.id)
         else:
             return
