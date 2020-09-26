@@ -7,7 +7,10 @@ import youtube_dl
 from youtubesearchpython import SearchVideos
 import random
 import sports
-import pycricbuzz
+from pycricbuzz import Cricbuzz
+import tracemalloc
+
+tracemalloc.start()
 
 bot = commands.Bot(command_prefix = '.')
 
@@ -19,8 +22,21 @@ async def on_ready():
         if file.endswith('.mp3'):
             os.remove(file)
 
+@bot.event
+async def on_message(message):
+
+    if message.author == bot.user:
+        for I in message.embeds:
+            if I!=[]:
+                if 'IPL POLLING' in I.title:
+                    await message.add_reaction(emoji = '1️⃣')
+                    await message.add_reaction(emoji = '2️⃣')
+        return
+    
+    await bot.process_commands(message)
+
 load_dotenv()
-song_list = {os.getenv('server1'):[],os.getenv('server2'):[],os.getenv('server3'):[],os.getenv('server4'):[]}}
+song_list = {os.getenv('server1'):[],os.getenv('server2'):[],os.getenv('server3'):[],os.getenv('server4'):[],os.getenv('server5'):[]}
         
 @bot.command(aliases=['seru'])
 async def join(ctx):
@@ -31,6 +47,7 @@ async def join(ctx):
         return
     try:
         await ctx.message.author.voice.channel.connect()
+        await ctx.send('swagat to karo humara')
     except:
         await ctx.send('abbe mandbuddhi, VC to join karo')
 
@@ -46,7 +63,7 @@ async def play(ctx,*args):
         await ctx.send(f'**`{songa}` ko line me lagwa diye he**')
 
         if ctx.message.guild.voice_client.is_playing()==False:
-            download(ctx.message.guild.voice_client,ctx.guild.id)
+           download(ctx.message.guild.voice_client,ctx.guild.id)
         else:
             return
     else:
@@ -69,7 +86,7 @@ def download(voice_client,server_id):
     results = SearchVideos(song,offset=1,mode='dict',max_results=1)
     x = results.result()
     for I in x['search_result']:
-        songa = I['title']
+        song = I['title']
 
         #await ctx.send(f'*ruko burbak `{songa}` ko download hone do*')
 
@@ -85,7 +102,7 @@ def download(voice_client,server_id):
         ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
         #ytdl.download([I['link']])
 
-    #await ctx.send(f'*ab suno`{songa}` aur apna manorajan karo*')
+    #await ctx.send(f'*ab suno`{song}` aur apna manorajan karo*')
 
     if voice_client.is_playing()==False:
 
@@ -122,14 +139,13 @@ async def remove(ctx,position : int):
             await ctx.send('jab koi line he hi nahi to kya hatao ge be')
             return
         try :
-            await ctx.send(f'kya yaar, `{song_list[position-1]}` humse hi hatwana tha')
+            await ctx.send(f'kya yaar, `{song_list[ctx.guild.id][position-1]}` humse hi hatwana tha')
             song_list[ctx.guild.id].pop(position-1)
         except:
             await ctx.send('ek minute... ye kya, tumhara to number hi line ke bahar he')
     else:
         await ctx.send('abbe mandbuddhi, VC to join karo')
     
-
 @bot.command(aliases = ['niruthu'])
 async def pause(ctx):
     if ctx.message.author.voice == None:
@@ -160,6 +176,7 @@ async def disconnect(ctx):
     for x in bot.voice_clients:
         if(x.guild == ctx.message.guild):
             song_list[ctx.guild.id]=[]
+            await ctx.send('phir milte he')
             return await x.disconnect()
     if bot.voice_clients==[]:
         await ctx.send('abbe hum gaye hi kab jo tum humko nikaloge')
@@ -179,8 +196,13 @@ async def member_count(ctx):
 
 @bot.command()
 async def all_members(ctx):
+    duplicate = []
     for I in bot.get_all_members():
-        await ctx.send(I.name)
+        if ctx.guild == I.guild:
+            if I.name in duplicate:
+                continue
+            await ctx.send(I.name)
+            duplicate.append(I.name)
 
 @bot.command()
 async def change(ctx, member : discord.Member, *args):
@@ -193,19 +215,28 @@ async def avatar(ctx, user: discord.User = None):
         user = ctx.message.author
     await ctx.send(user.avatar_url_as())
 
-@bot.command()
-async def mobile(ctx , member : discord.Member):
-    if member.is_on_mobile() == True :
+
+    if user.is_on_mobile() == True :
         await ctx.send('kaun sa mobilewa pe ho be , nokia ?')
-    elif member.is_on_mobile() == False:
+    elif user.is_on_mobile() == False:
         await ctx.send('PC use karta hai bade aadmi kahin ka')
     
 @bot.command()
 async def Q(ctx,*args):
-            question= ' '.join(args)
-            for j in search(question, tld="co.in", num=1, stop=1, pause=2):
-                await ctx.send(j)
-        
+    question= ' '.join(args)
+    for j in search(question, tld="co.in", num=1, stop=1, pause=2):
+         await ctx.send(j)
+
+@bot.command()
+async def live_score(ctx,*args):
+    teams = ' '.join(args)
+    match = sports.get_match(sports.CRICKET,teams[0],teams[2])
+    if match.match_time == 'Match Finished':
+        await ctx.send('abhi to shuru bhi nahi hua hai burbak')
+        return
+    await ctx.send(f'{match.home_team} , {match.home_score}')
+    await ctx.send(f'{match.away_team} , {match.away_score}')
+
 @bot.command()
 async def roast(ctx,arg):
     roasts = {
@@ -273,15 +304,12 @@ async def girlfriend(ctx, arg):
     }
 
     await ctx.send(gfs.get(arg.lower(), "kiski girlfriend pooch rahe ho <:abeysaale:731486907208433724>"))
-    
+
 @bot.command()
-async def ipl(ctx,*args):
-    try:
-        match = sports.get_match(sports.CRICKET, args[0], args[2])
-    except:
-        await ctx.send('abbe kya type kiya he be')
+async def ipl(ctx):
+    match = sports.get_match(sports.CRICKET, 's', 'a')
     if match.match_time == 'Match Finished':
-        await ctx.send('abe shuru to hone do')
+        await ctx.send('abe saale abhi to koi game nahi chal raha hai')
         return
     embed = discord.Embed(title='IPL 2020', colour=discord.Colour.gold())
     embed.add_field(name=match.away_team , value=match.away_score , inline = False)
@@ -290,11 +318,13 @@ async def ipl(ctx,*args):
 
 @bot.command()
 async def current_score(ctx):   
-    mid = match_id()
     match = Cricbuzz()
-    details = match.livescore(mid)
-
-    embed1 = discord.Embed(title=f"Current Batting Team : {details['batting']['team']}", colour=discord.Colour.red())
+    try:
+        details = match.livescore(match_id())
+        embed1 = discord.Embed(title=f"Current Batting Team : {details['batting']['team']}", colour=discord.Colour.red())
+    except:
+        await ctx.send('abe saale abhi to koi game nahi chal raha hai')
+        return
 
     embed1.add_field(
             name = f"Batsman Name : {details['batting']['batsman'][0]['name']}",
@@ -329,13 +359,17 @@ def match_id():
     c = Cricbuzz()
     matches = c.matches()
     for I in matches:
-        if I['srs']=='Indian Premier League 2020':
+        if I['srs']=='Indian Premier League 2020' and (I['mchstate']=='toss' or I['mchstate']=='inprogress'):
             return I['id']
 
 @bot.command()
 async def teams(ctx):
     c = Cricbuzz()
-    I = c.matchinfo(match_id())
+    try:
+        I = c.matchinfo(match_id())
+    except:
+        await ctx.send('abe saale abhi to koi game nahi chal raha hai')
+        return
     embed1 = discord.Embed(title= I['team1']['name'], colour=discord.Colour.blue())
     for X,J in enumerate(I['team1']['squad']):
         embed1.add_field(name = J,value = f'{X+1}',inline = False)
@@ -348,12 +382,31 @@ async def teams(ctx):
 @bot.command()
 async def status(ctx):
     c = Cricbuzz()
-    match = c.matchinfo(match_id())
-    await ctx.send(match['status'])
+    try:
+        I = c.matchinfo(match_id())
+    except:
+        await ctx.send('abe saale abhi to koi game nahi chal raha hai')
+        return
+    await ctx.send(I['status'])
+
+@bot.command()
+async def toss(ctx):
+    c = Cricbuzz()
+    try:
+        I = c.matchinfo(match_id())
+    except:
+        await ctx.send('abe saale abhi to koi game nahi chal raha hai')
+        return
+    await ctx.send(I['toss'])
 
 @bot.command()
 async def venue(ctx):
     c = Cricbuzz()
+    try:
+        match = c.matchinfo(match_id())
+    except:
+        await ctx.send('abe saale abhi to koi game nahi chal raha hai')
+        return
     match = c.matchinfo(match_id())
     await ctx.send(match["venue_name"])
     await ctx.send(match['venue_location'])
@@ -361,7 +414,11 @@ async def venue(ctx):
 @bot.command()
 async def score_card(ctx):
     c = Cricbuzz()
-    scorecard = c.scorecard(match_id())['scorecard'][0]
+    try:
+        scorecard = c.scorecard(match_id())['scorecard'][0]
+    except:
+        await ctx.send('abe saale abhi to koi game nahi chal raha hai')
+        return
 
     embed1 = discord.Embed(title = f"Batting Team : {scorecard['batteam']}" , colour=discord.Colour.blue())
     embed1.description = f"Score {scorecard['runs']}/{scorecard['wickets']}, Overs {scorecard['overs']}"
@@ -391,6 +448,36 @@ async def score_card(ctx):
     await ctx.send(embed = embed2)
 
 @bot.command()
+async def prev_match(ctx):
+    c = Cricbuzz()
+    matches = c.matches()
+    for I in matches:
+        if I['srs']=='Indian Premier League 2020' and I['mchstate']=='mom':
+            embed = discord.Embed(title = f"{I['team1']['name']} vs {I['team2']['name']}" , colour = discord.Colour.blue())
+            embed.description = f"{I['status']}"
+            await ctx.send(embed = embed)
+
+@bot.command()
+async def next_match(ctx):
+    c = Cricbuzz()
+    matches = c.matches()
+    for I in matches:
+        if I['srs']=='Indian Premier League 2020' and I['mchstate']=='preview':
+            embed = discord.Embed(title = f"{I['team1']['name']} vs {I['team2']['name']}" , colour = discord.Colour.blue())
+            embed.description = f"{I['status']}"
+            await ctx.send(embed = embed)
+
+@bot.command()
+async def poll(ctx):
+    c = Cricbuzz()
+    matches = c.matches()
+    for I in matches:
+        if I['srs']=='Indian Premier League 2020' and I['mchstate']=='preview':
+            embed = discord.Embed(title = f"IPL POLLING\n{I['team1']['name']} vs {I['team2']['name']}" , colour = discord.Colour.blue())
+            embed.description = f"{I['team1']['name']} : 1️⃣\n\n{I['team2']['name']} : 2️⃣ "
+            await ctx.send(embed = embed)
+    
+@bot.command()
 async def football(ctx,*args):
     try:
         match = sports.get_match(sports.SOCCER, args[0], args[2])
@@ -416,5 +503,3 @@ async def dhanyavaad(ctx):
 
 token=os.getenv('token')
 bot.run(token)
-
-
