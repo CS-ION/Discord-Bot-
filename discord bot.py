@@ -214,28 +214,12 @@ async def avatar(ctx, user: discord.User = None):
     if user==None:
         user = ctx.message.author
     await ctx.send(user.avatar_url_as())
-
-
-    if user.is_on_mobile() == True :
-        await ctx.send('kaun sa mobilewa pe ho be , nokia ?')
-    elif user.is_on_mobile() == False:
-        await ctx.send('PC use karta hai bade aadmi kahin ka')
     
 @bot.command()
 async def Q(ctx,*args):
     question= ' '.join(args)
     for j in search(question, tld="co.in", num=1, stop=1, pause=2):
          await ctx.send(j)
-
-@bot.command()
-async def live_score(ctx,*args):
-    teams = ' '.join(args)
-    match = sports.get_match(sports.CRICKET,teams[0],teams[2])
-    if match.match_time == 'Match Finished':
-        await ctx.send('abhi to shuru bhi nahi hua hai burbak')
-        return
-    await ctx.send(f'{match.home_team} , {match.home_score}')
-    await ctx.send(f'{match.away_team} , {match.away_score}')
 
 @bot.command()
 async def roast(ctx,arg):
