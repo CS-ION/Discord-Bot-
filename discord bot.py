@@ -3,6 +3,7 @@ from discord.ext import commands
 from googlesearch import search
 from dotenv import load_dotenv
 import os
+import asyncio
 import youtube_dl
 from youtubesearchpython import SearchVideos
 import random
@@ -17,27 +18,29 @@ bot = commands.Bot(command_prefix = '.')
 @bot.event
 async def on_ready():
     print(f"{bot.user} has connected to discord...\n")
-    
-    for file in os.listdir():
-        if file.endswith('.mp3'):
-            os.remove(file)
 
 @bot.event
 async def on_message(message):
-
+    
     if message.author == bot.user:
         for I in message.embeds:
-            if I!=[]:
-                if 'IPL POLLING' in I.title:
-                    await message.add_reaction(emoji = '1️⃣')
-                    await message.add_reaction(emoji = '2️⃣')
+                if I!=[]:
+                    if 'IPL POLLING' in I.title:
+                        await message.add_reaction(emoji = '1️⃣')
+                        await message.add_reaction(emoji = '2️⃣')
         return
-    
+
     await bot.process_commands(message)
+
+@bot.event
+async def on_command_error(ctx , error):
+    await ctx.send(f'abe mandbuddhi {ctx.message.author.mention}')
+    await ctx.send(error)
 
 load_dotenv()
 song_list = {os.getenv('server1'):[],os.getenv('server2'):[],os.getenv('server3'):[],os.getenv('server4'):[],os.getenv('server5'):[]}
-        
+Pause = False
+
 @bot.command(aliases=['seru'])
 async def join(ctx):
     global song_list
@@ -57,19 +60,24 @@ async def play(ctx,*args):
     if  ctx.message.author.voice!=None and (ctx.guild.voice_client in bot.voice_clients):
         
         global song_list
+        global Pause
         songa = ' '.join(args)
         song_list[ctx.guild.id].append(songa)
 
-        await ctx.send(f'**`{songa}` ko line me lagwa diye he**')
+        if len(song_list[ctx.guild.id])!=1 or ctx.message.guild.voice_client.is_playing()==True or Pause==True:
+            await ctx.send(f'**`{songa}` ko line me lagwa diye he**')
 
-        if ctx.message.guild.voice_client.is_playing()==False:
-           download(ctx.message.guild.voice_client,ctx.guild.id)
-        else:
-            return
+        if ctx.message.guild.voice_client.is_playing()==False and Pause==False:
+           download(ctx,ctx.message.guild.voice_client,ctx.guild.id)
+
     else:
         await ctx.send('abbe mandbuddhi, VC to join karo')       
 
-def download(voice_client,server_id):
+def download(ctx,voice_client,server_id):
+    asyncio.run_coroutine_threadsafe(playing_song(ctx,voice_client,server_id),bot.loop)
+    pass
+
+async def playing_song(ctx,voice_client,server_id):
 
     global song_list
     
@@ -79,16 +87,9 @@ def download(voice_client,server_id):
         return
     song_list[server_id].pop(0)
 
-    for file in os.listdir():
-                if file.endswith('.mp3'):
-                    os.remove(file)
-
     results = SearchVideos(song,offset=1,mode='dict',max_results=1)
     x = results.result()
     for I in x['search_result']:
-        song = I['title']
-
-        #await ctx.send(f'*ruko burbak `{songa}` ko download hone do*')
 
         ytdl_format_options = {
                 'format' : 'bestaudio/best' ,
@@ -101,20 +102,18 @@ def download(voice_client,server_id):
 
         ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
         #ytdl.download([I['link']])
-
-    #await ctx.send(f'*ab suno`{song}` aur apna manorajan karo*')
+    
+    embed = discord.Embed(title=f"*ab suno\n`{I['title']}`\naur apna manorajan karo*", colour=discord.Colour.red())
+    embed.set_thumbnail(url = I['thumbnails'][0])
+    embed.add_field( name='Duration' , value = I['duration'])
+    await ctx.send(embed=embed)
 
     if voice_client.is_playing()==False:
 
         audio = ytdl.extract_info(I['link'],download = False)
         streamable_url = audio['formats'][0]['url']
         before_options = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
-        voice_client.play(discord.FFmpegPCMAudio(streamable_url,before_options = before_options),after =lambda e: download(voice_client,server_id))
-    
-       
-        for file in os.listdir():
-            if file.endswith('.mp3'):
-                voice_client.play(discord.FFmpegPCMAudio(file),after =lambda e: download(voice_client,server_id))
+        voice_client.play(discord.FFmpegPCMAudio(streamable_url,before_options = before_options),after =lambda e: download(ctx,voice_client,server_id))
 
     else:
         return
@@ -148,25 +147,31 @@ async def remove(ctx,position : int):
     
 @bot.command(aliases = ['niruthu'])
 async def pause(ctx):
+    global Pause
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
     ctx.message.guild.voice_client.pause()
+    Pause = True
     await ctx.send('kya yaar beech me rok kar poora maza kharab kar diye')
     
 @bot.command(aliases = ['thodurum'])
 async def resume(ctx):
+    global Pause
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
     ctx.message.guild.voice_client.resume()
+    Pause = False
     await ctx.send('je hui na baat ab maze karo')
 
 @bot.command(aliases = ['poda_patti','s'])
 async def skip(ctx):
+    global Pause
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
+    Pause = False
     ctx.message.guild.voice_client.stop()
     await ctx.send('kya yaar, itne badhiya gane ko hata diya')
     
@@ -288,6 +293,33 @@ async def girlfriend(ctx, arg):
     }
 
     await ctx.send(gfs.get(arg.lower(), "kiski girlfriend pooch rahe ho <:abeysaale:731486907208433724>"))
+
+@bot.command()
+async def pingu(ctx, member:discord.Member):
+    if member.discriminator == '4777':
+        await ctx.send('poda patti')
+        return
+    n=0
+    while n<6:
+        await ctx.send(member.mention)
+        n=n+1
+
+@bot.command()
+async def everyone(ctx):
+
+    L = [os.getenv('Vivek'),
+    os.getenv('Dannyboi'),
+    os.getenv('ValdyFox'),
+    os.getenv('FractalsAreBae'),
+    os.getenv('Silent_Killer'),
+    os.getenv('SKULL_TROOPER'),
+    os.getenv('jetso'),
+    os.getenv('yallaboi'),]
+
+    for I in L:
+        if I == ctx.message.author.id :
+            continue
+        await ctx.send(f'<@!{I}>')
 
 @bot.command()
 async def ipl(ctx):
@@ -456,11 +488,11 @@ async def poll(ctx):
     c = Cricbuzz()
     matches = c.matches()
     for I in matches:
-        if I['srs']=='Indian Premier League 2020' and I['mchstate']=='preview':
+        if I['srs']=='Indian Premier League 2020' and (I['mchstate']=='inprogress' or I['mchstate']=='preview'):
             embed = discord.Embed(title = f"IPL POLLING\n{I['team1']['name']} vs {I['team2']['name']}" , colour = discord.Colour.blue())
             embed.description = f"{I['team1']['name']} : 1️⃣\n\n{I['team2']['name']} : 2️⃣ "
             await ctx.send(embed = embed)
-    
+  
 @bot.command()
 async def football(ctx,*args):
     try:
@@ -475,12 +507,13 @@ async def football(ctx,*args):
     await ctx.send(embed = embed)
 
 @bot.command()
+async def ping(ctx):
+    await ctx.send(f'rukawat ki khed he\nping : {round(bot.latency,2)}')
+
+@bot.command()
 async def dhanyavaad(ctx):
     if ctx.message.author.id == 518342269955342347 :
         await ctx.send('aate hai')
-        for file in os.listdir():
-            if file.endswith('.mp3'):
-                os.remove(file)
         await ctx.bot.logout()
     else :
         await ctx.send('bhediyon me itna dam nahi ki sheron ko bhaga sake')
