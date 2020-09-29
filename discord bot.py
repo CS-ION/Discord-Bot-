@@ -83,9 +83,9 @@ def download(ctx,voice_client,server_id):
 async def playing_song(ctx,voice_client,server_id):
 
     global song_list
-    radio = {'HiFM':'http://listen-hifmtemp.sharp-stream.com/hifmmid.mp3',
-            'Merge':'http://uk7.internet-radio.com:8040',
-            'Virgin':'http://uk5.internet-radio.com:8115' }
+    radio = {'HiFM':os.getenv('HiFM'),
+            'Merge':os.getenv('Merge'),
+            'Virgin':os.getenv('Virgin') }
     
     try:
         song = song_list[server_id][0]
