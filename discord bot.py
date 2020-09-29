@@ -38,13 +38,16 @@ async def on_command_error(ctx , error):
     await ctx.send(error)
 
 load_dotenv()
-song_list = {os.getenv('server1'):[],os.getenv('server2'):[],os.getenv('server3'):[],os.getenv('server4'):[],os.getenv('server5'):[]}
-Pause = False
+servers = (os.getenv('server1'),os.getenv('server2'),os.getenv('server3'),os.getenv('server4'),os.getenv('server5'))
+song_list = dict.fromkeys(servers,[])
+Pause_list = dict.fromkeys(servers, False)
 
 @bot.command(aliases=['seru'])
 async def join(ctx):
     global song_list
+    global Pause_list
     song_list[ctx.guild.id] = []
+    Pause_list[ctx.guild.id] = False
     if ctx.guild.voice_client in bot.voice_clients:
         await ctx.send('abbe hum tumhare baap he, tumhare kehne se pehle aa gaye')
         return
@@ -60,14 +63,14 @@ async def play(ctx,*args):
     if  ctx.message.author.voice!=None and (ctx.guild.voice_client in bot.voice_clients):
         
         global song_list
-        global Pause
+        global Pause_list
         songa = ' '.join(args)
         song_list[ctx.guild.id].append(songa)
 
-        if len(song_list[ctx.guild.id])!=1 or ctx.message.guild.voice_client.is_playing()==True or Pause==True:
+        if len(song_list[ctx.guild.id])!=1 or ctx.message.guild.voice_client.is_playing()==True or Pause_list[ctx.guild.id]==True:
             await ctx.send(f'**`{songa}` ko line me lagwa diye he**')
 
-        if ctx.message.guild.voice_client.is_playing()==False and Pause==False:
+        if ctx.message.guild.voice_client.is_playing()==False and Pause_list[ctx.guild.id]==False:
            download(ctx,ctx.message.guild.voice_client,ctx.guild.id)
 
     else:
@@ -80,6 +83,9 @@ def download(ctx,voice_client,server_id):
 async def playing_song(ctx,voice_client,server_id):
 
     global song_list
+    radio = {'HiFM':'http://listen-hifmtemp.sharp-stream.com/hifmmid.mp3',
+            'Merge':'http://uk7.internet-radio.com:8040',
+            'Virgin':'http://uk5.internet-radio.com:8115' }
     
     try:
         song = song_list[server_id][0]
@@ -87,6 +93,11 @@ async def playing_song(ctx,voice_client,server_id):
         return
     song_list[server_id].pop(0)
 
+    if song in radio.keys():
+        voice_client.play(discord.FFmpegPCMAudio(radio[song]),after =lambda e: download(ctx,voice_client,server_id))
+        await ctx.send(f'Now Playing : {song} Radio') 
+        return
+    
     results = SearchVideos(song,offset=1,mode='dict',max_results=1)
     x = results.result()
     for I in x['search_result']:
@@ -147,40 +158,42 @@ async def remove(ctx,position : int):
     
 @bot.command(aliases = ['niruthu'])
 async def pause(ctx):
-    global Pause
+    global Pause_list
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
     ctx.message.guild.voice_client.pause()
-    Pause = True
+    Pause_list[ctx.guild.id] = True
     await ctx.send('kya yaar beech me rok kar poora maza kharab kar diye')
     
 @bot.command(aliases = ['thodurum'])
 async def resume(ctx):
-    global Pause
+    global Pause_list
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
     ctx.message.guild.voice_client.resume()
-    Pause = False
+    Pause_list[ctx.guild.id] = False
     await ctx.send('je hui na baat ab maze karo')
 
 @bot.command(aliases = ['poda_patti','s'])
 async def skip(ctx):
-    global Pause
+    global Pause_list
     if ctx.message.author.voice == None:
         await ctx.send('abbe mandbuddhi, VC to join karo')
         return
-    Pause = False
+    Pause_list[ctx.guild.id] = False
     ctx.message.guild.voice_client.stop()
     await ctx.send('kya yaar, itne badhiya gane ko hata diya')
-    
+   
 @bot.command(aliases = ['poda','d'])
 async def disconnect(ctx):
+    global Pause_list
     global song_list
     for x in bot.voice_clients:
         if(x.guild == ctx.message.guild):
             song_list[ctx.guild.id]=[]
+            Pause_list[ctx.guild.id] = False
             await ctx.send('phir milte he')
             return await x.disconnect()
     if bot.voice_clients==[]:
