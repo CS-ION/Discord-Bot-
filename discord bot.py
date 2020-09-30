@@ -262,24 +262,34 @@ async def roast(ctx,arg):
 
 @bot.command()
 async def proifucts(ctx):
-    hershel=['https://cdn.discordapp.com/emojis/742244405523513344.png?v=1','https://cdn.discordapp.com/emojis/735902946432254083.png?v=1','https://cdn.discordapp.com/emojis/727173056073564220.png?v=1']
+    hershel=['https://cdn.discordapp.com/emojis/742244405523513344.png?v=1',
+    'https://cdn.discordapp.com/emojis/735902946432254083.png?v=1',
+    'https://cdn.discordapp.com/emojis/727173056073564220.png?v=1']
     await ctx.send('https://cdn.discordapp.com/emojis/736858611627851787.png?v=1')
     await ctx.send('https://cdn.discordapp.com/emojis/736858136790564966.png?v=1')
     await ctx.send(random.choice(hershel))
 
 @bot.command()
 async def SC(ctx):
-    sc = ['https://cdn.discordapp.com/emojis/726719083076255755.png?v=1','https://cdn.discordapp.com/emojis/727172647519125544.png?v=1','https://cdn.discordapp.com/emojis/750210732184043580.png?v=1']
+    sc = ['https://cdn.discordapp.com/emojis/726719083076255755.png?v=1',
+    'https://cdn.discordapp.com/emojis/727172647519125544.png?v=1',
+    'https://cdn.discordapp.com/emojis/750210732184043580.png?v=1',
+    'https://cdn.discordapp.com/emojis/760778635937841153.png?v=1']
     await ctx.send(random.choice(sc))
 
 @bot.command()
 async def NizwaHC(ctx):
-    await ctx.send('https://cdn.discordapp.com/emojis/728912662083403847.png?v=1')
+    romir = ['https://cdn.discordapp.com/emojis/728912662083403847.png?v=1',
+             'https://cdn.discordapp.com/attachments/674567305291890701/760782607373303828/unknown.png']
+    await ctx.send(random.choice(romir))
 
 @bot.command()
 async def MuscatHC(ctx):
-    ramna=['https://cdn.discordapp.com/emojis/743124529471160401.png?v=1','https://cdn.discordapp.com/emojis/727881883987476490.png?v=1']
-    ronek=['https://cdn.discordapp.com/emojis/727889938674352169.png?v=1','https://cdn.discordapp.com/emojis/727890732190531644.png?v=1']
+    ramna=['https://cdn.discordapp.com/emojis/743124529471160401.png?v=1',
+           'https://cdn.discordapp.com/emojis/727881883987476490.png?v=1',
+           'https://cdn.discordapp.com/emojis/760779912587509771.png?v=1']
+    ronek=['https://cdn.discordapp.com/emojis/727889938674352169.png?v=1',
+           'https://cdn.discordapp.com/emojis/727890732190531644.png?v=1']
     await ctx.send(random.choice(ramna))
     await ctx.send(random.choice(ronek))
     
@@ -296,7 +306,8 @@ async def meme(ctx):
              'https://media.discordapp.net/attachments/674638164467515432/753290178944172102/SPOILER_Z.png?width=817&height=406',
              'https://media.discordapp.net/attachments/674638164467515432/753290066515853332/SPOILER_lmaoooo.png',
              'https://images-ext-1.discordapp.net/external/b2bXXz8lOxAnfYAbXuVYRxGAEuGT984QVhkWu96H5OQ/%3Fwidth%3D313%26height%3D375/https/media.discordapp.net/attachments/674567305291890701/752818609994203186/SPOILER_MR_CHIRKU.png',
-             'https://media.discordapp.net/attachments/674638164467515432/753289976589975753/SPOILER_9k.png']
+             'https://media.discordapp.net/attachments/674638164467515432/753289976589975753/SPOILER_9k.png',
+             'https://media.discordapp.net/attachments/674567305291890701/760773029193318440/Z.png?width=400&height=251']
     await ctx.send(random.choice(memes))
                    
 @bot.command()
