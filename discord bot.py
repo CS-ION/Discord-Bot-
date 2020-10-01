@@ -348,14 +348,17 @@ async def everyone(ctx):
 
 @bot.command()
 async def ipl(ctx):
-    match = sports.get_match(sports.CRICKET, 's', 'a')
-    if match.match_time == 'Match Finished':
-        await ctx.send('abe saale abhi to koi game nahi chal raha hai')
-        return
-    embed = discord.Embed(title='IPL 2020', colour=discord.Colour.gold())
-    embed.add_field(name=match.away_team , value=match.away_score , inline = False)
-    embed.add_field(name=match.home_team , value=match.home_score , inline = False)
-    await ctx.send(embed = embed)
+    matches = sports.get_sport(sports.CRICKET)
+    print(matches)
+    for match in matches:
+        if match.league == 'IND-IPL':
+            if match.match_time == 'Match Finished':
+                await ctx.send('abe saale abhi to koi game nahi chal raha hai')
+                return
+            embed = discord.Embed(title='IPL 2020', colour=discord.Colour.gold())
+            embed.add_field(name=match.away_team , value=match.away_score , inline = False)
+            embed.add_field(name=match.home_team , value=match.home_score , inline = False)
+            await ctx.send(embed = embed)
 
 @bot.command()
 async def current_score(ctx):   
