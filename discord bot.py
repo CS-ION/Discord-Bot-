@@ -9,6 +9,7 @@ from youtubesearchpython import SearchVideos
 import random
 import sports
 from pycricbuzz import Cricbuzz
+import ratings
 import tracemalloc
 
 tracemalloc.start()
@@ -530,6 +531,17 @@ async def football(ctx,*args):
     embed.add_field( name = f'{match.home_team}' , value = f'{match.home_score}')
     await ctx.send(embed = embed)
 
+@bot.command()
+async def rating(ctx,*args):
+    key = ratings.get_player(' '.join(args))
+    if key == None:
+        await ctx.send('sorry yaar player not found')
+        return
+    elif type(key)==int:
+        await ctx.send(f'https://media.contentapi.ea.com/content/dam/ea/fifa/fifa-21/ratings-collective/f20assets/player-shields/{key}.png')
+    else:
+        await ctx.send(key)
+                                 
 @bot.command()
 async def ping(ctx):
     await ctx.send(f'rukawat ki khed he\nping : {round(bot.latency,2)}')
