@@ -349,7 +349,6 @@ async def everyone(ctx):
 @bot.command()
 async def ipl(ctx):
     matches = sports.get_sport(sports.CRICKET)
-    print(matches)
     for match in matches:
         if match.league == 'IND-IPL':
             if match.match_time == 'Match Finished':
@@ -359,6 +358,7 @@ async def ipl(ctx):
             embed.add_field(name=match.away_team , value=match.away_score , inline = False)
             embed.add_field(name=match.home_team , value=match.home_score , inline = False)
             await ctx.send(embed = embed)
+            return
 
 @bot.command()
 async def current_score(ctx):   
