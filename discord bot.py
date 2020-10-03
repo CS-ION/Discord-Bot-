@@ -69,7 +69,7 @@ async def play(ctx,*args):
         global Pause_list
         songa = ' '.join(args)
         
-        if 'https://open.spotify.com/playlist/' in songa:
+        if 'https://open.spotify.com/' in songa:
             songa = spotify_queue(ctx,songa)
         else:
             song_list[ctx.guild.id].append(songa)
@@ -140,10 +140,15 @@ def spotify_queue(ctx,link):
     global song_list
     sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=os.getenv('Spotify_id'),client_secret=os.getenv('Spotify_secret')))
     L = link.split('/')
-    tracks = sp.playlist_tracks(L.pop())
-    for I in tracks["items"]:
-                song_list[ctx.guild.id].append(I["track"]["name"])
-    return f"{tracks['total']} gaane from spotify playlist"
+    if 'https://open.spotify.com/playlist/' in link:
+        tracks = sp.playlist_tracks(L.pop())
+        for I in tracks["items"]:
+            song_list[ctx.guild.id].append(I["track"]["name"])
+        return f"{tracks['total']} gaane from spotify playlist"
+    elif 'https://open.spotify.com/track/' in link:
+        track = sp.track(L.pop())
+        song_list[ctx.guild.id].append(track['name'])
+        return track['name']
                           
 @bot.command(aliases=['line','q'])
 async def queue(ctx):
