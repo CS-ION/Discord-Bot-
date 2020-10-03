@@ -6,6 +6,8 @@ import os
 import asyncio
 import youtube_dl
 from youtubesearchpython import SearchVideos
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 import random
 import sports
 from pycricbuzz import Cricbuzz
@@ -66,7 +68,11 @@ async def play(ctx,*args):
         global song_list
         global Pause_list
         songa = ' '.join(args)
-        song_list[ctx.guild.id].append(songa)
+        
+        if 'https://open.spotify.com/playlist/' in songa:
+            songa = spotify_queue(ctx,songa)
+        else:
+            song_list[ctx.guild.id].append(songa)
 
         if len(song_list[ctx.guild.id])!=1 or ctx.message.guild.voice_client.is_playing()==True or Pause_list[ctx.guild.id]==True:
             await ctx.send(f'**`{songa}` ko line me lagwa diye he**')
@@ -129,7 +135,16 @@ async def playing_song(ctx,voice_client,server_id):
 
     else:
         return
-    
+
+def spotify_queue(ctx,link):
+    global song_list
+    sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=os.getenv('Spotify_id'),client_secret=os.getenv('Spotify_secret')))
+    L = link.split('/')
+    tracks = sp.playlist_tracks(L.pop())
+    for I in tracks["items"]:
+                song_list[ctx.guild.id].append(I["track"]["name"])
+    return f"{tracks['total']} gaane from spotify playlist"
+                          
 @bot.command(aliases=['line','q'])
 async def queue(ctx):
     global song_list
