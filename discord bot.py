@@ -142,7 +142,7 @@ def spotify_queue(ctx,link):
     L = link.split('/')
     if 'https://open.spotify.com/playlist/' in link:
         tracks = sp.playlist_tracks(L.pop())
-        for I in tracks["items"]:
+        for I in tracks['tracks']['items']:
             song_list[ctx.guild.id].append(I["track"]["name"])
         return f"{tracks['total']} gaane from spotify playlist"
     elif 'https://open.spotify.com/track/' in link:
