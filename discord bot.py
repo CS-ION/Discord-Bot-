@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.utils import get
 from googlesearch import search
 from dotenv import load_dotenv
 import os
@@ -31,7 +32,13 @@ async def on_message(message):
                     if 'IPL POLLING' in I.title:
                         await message.add_reaction(emoji = '1️⃣')
                         await message.add_reaction(emoji = '2️⃣')
+                    elif 'POLLING' in I.title:
+                        await message.add_reaction(emoji = '🇾')
+                        await message.add_reaction(emoji = '🇳')
         return
+    
+    #user = get(bot.get_all_members(), id=477125339034681345)
+    #await user.send("<@!477125339034681345>")
 
     await bot.process_commands(message)
 
@@ -41,7 +48,7 @@ async def on_command_error(ctx , error):
     await ctx.send(error)
 
 load_dotenv()
-servers = (os.getenv('server1'),os.getenv('server2'),os.getenv('server3'),os.getenv('server4'),os.getenv('server5'))
+servers = (os.getenv('server1'),os.getenv('server2'),os.getenv('server3'),os.getenv('server4'),os.getenv('server5'),os.getenv('server6'))
 song_list = dict.fromkeys(servers,[])
 Pause_list = dict.fromkeys(servers, False)
 
@@ -68,7 +75,7 @@ async def play(ctx,*args):
         global song_list
         global Pause_list
         songa = ' '.join(args)
-        
+
         if 'https://open.spotify.com/' in songa:
             songa = spotify_queue(ctx,songa)
         else:
@@ -142,14 +149,20 @@ def spotify_queue(ctx,link):
     L = link.split('/')
     if 'https://open.spotify.com/playlist/' in link:
         tracks = sp.playlist_tracks(L.pop())
-        for I in tracks['tracks']['items']:
-            song_list[ctx.guild.id].append(I["track"]["name"])
-        return f"{tracks['total']} gaane from spotify playlist"
+        for I in tracks['tracks']["items"]:
+            song_list[ctx.guild.id].append(f"{I['track']['name']} lyrics")
+        return f"{tracks['tracks']['total']} gaane from spotify playlist"
     elif 'https://open.spotify.com/track/' in link:
         track = sp.track(L.pop())
-        song_list[ctx.guild.id].append(track['name'])
+        song_list[ctx.guild.id].append(f"{track['name']} lyrics")
         return track['name']
-                          
+    elif 'https://open.spotify.com/album/' in link:
+        album_id = L.pop().split('?')[0]
+        album = sp.album(album_id)
+        for track in album['tracks']['items']:
+            song_list[ctx.guild.id].append(f"{track['name']} lyrics")
+        return f"Spotify album {album['name']} se {album['total_tracks']} gaano"
+
 @bot.command(aliases=['line','q'])
 async def queue(ctx):
     global song_list
@@ -227,6 +240,9 @@ async def kick(ctx, member : discord.Member):
 
 @bot.command()
 async def b(ctx , no : int):
+    if ctx.message.author.discriminator not in ['9431','2961','4777']:
+        await ctx.send('sorry sarr u r not qualified')
+        return
     await ctx.message.channel.purge(limit=no)
     
 @bot.command()
@@ -317,6 +333,8 @@ async def MuscatHC(ctx):
 @bot.command()
 async def meme(ctx):
     memes = ['https://media.discordapp.net/attachments/674638164467515432/753290676351008928/4bpjdv.png?width=362&height=406',
+             'https://media.discordapp.net/attachments/674567305291890701/763840048151396374/momcanweabi.jpg?width=508&height=480',
+             'https://cdn.discordapp.com/attachments/674567305291890701/762948863513722890/SPOILER_Z.png',
              'https://media.discordapp.net/attachments/674638164467515432/753290636093948084/Z.png?width=412&height=406',
              'https://media.discordapp.net/attachments/674638164467515432/753290581677178920/20200820_093621.png?width=356&height=406',
              'https://media.discordapp.net/attachments/674638164467515432/753290525259464844/SPOILER_bruh.png',
@@ -328,7 +346,9 @@ async def meme(ctx):
              'https://media.discordapp.net/attachments/674638164467515432/753290066515853332/SPOILER_lmaoooo.png',
              'https://images-ext-1.discordapp.net/external/b2bXXz8lOxAnfYAbXuVYRxGAEuGT984QVhkWu96H5OQ/%3Fwidth%3D313%26height%3D375/https/media.discordapp.net/attachments/674567305291890701/752818609994203186/SPOILER_MR_CHIRKU.png',
              'https://media.discordapp.net/attachments/674638164467515432/753289976589975753/SPOILER_9k.png',
-             'https://media.discordapp.net/attachments/674567305291890701/760773029193318440/Z.png?width=400&height=251']
+             'https://media.discordapp.net/attachments/674567305291890701/760773029193318440/Z.png?width=400&height=251',
+             'https://media.discordapp.net/attachments/674567305291890701/760917676422856714/2.jpg?width=279&height=375',
+             'https://cdn.discordapp.com/attachments/674567305291890701/762946040894455808/4hhmhx.jpg']
     await ctx.send(random.choice(memes))
                    
 @bot.command()
@@ -367,6 +387,12 @@ async def everyone(ctx):
         await ctx.send(f'<@!{I}>')
 
 @bot.command()
+async def poll(ctx,*args):
+    embed = discord.Embed(title = f"POLLING\n{' '.join(args)}" , colour = discord.Colour.red())
+    embed.description = f"YES: 🇾 \n\nNO : 🇳 "
+    await ctx.send(embed = embed)
+    
+@bot.command()
 async def ipl(ctx):
     matches = sports.get_sport(sports.CRICKET)
     for match in matches:
@@ -379,7 +405,7 @@ async def ipl(ctx):
             embed.add_field(name=match.home_team , value=match.home_score , inline = False)
             await ctx.send(embed = embed)
             return
-
+            
 @bot.command()
 async def current_score(ctx):   
     match = Cricbuzz()
@@ -423,7 +449,7 @@ def match_id():
     c = Cricbuzz()
     matches = c.matches()
     for I in matches:
-        if I['srs']=='Indian Premier League 2020' and (I['mchstate']=='toss' or I['mchstate']=='inprogress'):
+        if I['srs']=='Indian Premier League 2020' and (I['mchstate']=='toss' or I['mchstate']=='inprogress' or I['mchstate']=='innings break'):
             return I['id']
 
 @bot.command()
@@ -532,7 +558,7 @@ async def next_match(ctx):
             await ctx.send(embed = embed)
 
 @bot.command()
-async def poll(ctx):
+async def ipl_poll(ctx):
     c = Cricbuzz()
     matches = c.matches()
     for I in matches:
@@ -564,7 +590,7 @@ async def rating(ctx,*args):
         await ctx.send(f'https://media.contentapi.ea.com/content/dam/ea/fifa/fifa-21/ratings-collective/f20assets/player-shields/{key}.png')
     else:
         await ctx.send(key)
-                                 
+
 @bot.command()
 async def ping(ctx):
     await ctx.send(f'rukawat ki khed he\nping : {round(bot.latency,2)}')
