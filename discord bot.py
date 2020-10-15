@@ -569,6 +569,13 @@ async def ipl_poll(ctx):
   
 @bot.command()
 async def football(ctx,*args):
+    if args == ():
+        matches = sports.get_sport(sports.SOCCER)
+        embed = discord.Embed(title = 'LIVE MATCHES', colour=discord.Colour.blurple()) 
+        for I in matches:
+            embed.add_field( name = f'{I}', value =  f'{I.league}')
+        await ctx.send(embed = embed)
+        return
     try:
         match = sports.get_match(sports.SOCCER, args[0], args[2])
     except:
