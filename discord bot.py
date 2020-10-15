@@ -604,7 +604,7 @@ async def ping(ctx):
 
 @bot.command()
 async def dhanyavaad(ctx):
-    if ctx.message.author.id == 518342269955342347 :
+    if ctx.message.author.discriminator == '4777' :
         await ctx.send('aate hai')
         await ctx.bot.logout()
     else :
