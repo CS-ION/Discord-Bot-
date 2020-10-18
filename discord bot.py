@@ -13,34 +13,12 @@ import random
 import sports
 from pycricbuzz import Cricbuzz
 import ratings
-import tracemalloc
-
-tracemalloc.start()
 
 bot = commands.Bot(command_prefix = '.')
 
 @bot.event
 async def on_ready():
     print(f"{bot.user} has connected to discord...\n")
-
-@bot.event
-async def on_message(message):
-    
-    if message.author == bot.user:
-        for I in message.embeds:
-                if I!=[]:
-                    if 'IPL POLLING' in I.title:
-                        await message.add_reaction(emoji = '1️⃣')
-                        await message.add_reaction(emoji = '2️⃣')
-                    elif 'POLLING' in I.title:
-                        await message.add_reaction(emoji = '🇾')
-                        await message.add_reaction(emoji = '🇳')
-        return
-    
-    #user = get(bot.get_all_members(), id=477125339034681345)
-    #await user.send("<@!477125339034681345>")
-
-    await bot.process_commands(message)
 
 @bot.event
 async def on_command_error(ctx , error):
@@ -390,7 +368,10 @@ async def everyone(ctx):
 async def poll(ctx,*args):
     embed = discord.Embed(title = f"POLLING\n{' '.join(args)}" , colour = discord.Colour.red())
     embed.description = f"YES: 🇾 \n\nNO : 🇳 "
-    await ctx.send(embed = embed)
+    #embed.set_image(url = 'https://th.thgim.com/migration_catalog/article11163206.ece/alternates/FREE_435/modi%20symbol')
+    message = await ctx.send(embed = embed)
+    await message.add_reaction(emoji = '🇾')
+    await message.add_reaction(emoji = '🇳')
     
 @bot.command()
 async def ipl(ctx):
@@ -565,7 +546,9 @@ async def ipl_poll(ctx):
         if I['srs']=='Indian Premier League 2020' and (I['mchstate']=='inprogress' or I['mchstate']=='preview'):
             embed = discord.Embed(title = f"IPL POLLING\n{I['team1']['name']} vs {I['team2']['name']}" , colour = discord.Colour.blue())
             embed.description = f"{I['team1']['name']} : 1️⃣\n\n{I['team2']['name']} : 2️⃣ "
-            await ctx.send(embed = embed)
+            message = await ctx.send(embed = embed)
+            await message.add_reaction(emoji = '1️⃣')
+            await message.add_reaction(emoji = '2️⃣')
   
 @bot.command()
 async def football(ctx,*args):
@@ -610,5 +593,9 @@ async def dhanyavaad(ctx):
     else :
         await ctx.send('bhediyon me itna dam nahi ki sheron ko bhaga sake')
 
+#user = get(bot.get_all_members(), id=123456789)
+#await user.send("<@!123456789>")
+
 token=os.getenv('token')
 bot.run(token)
+
