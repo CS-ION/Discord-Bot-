@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands,tasks
 from discord.utils import get
 from googlesearch import search
 from dotenv import load_dotenv
@@ -549,7 +549,41 @@ async def ipl_poll(ctx):
             message = await ctx.send(embed = embed)
             await message.add_reaction(emoji = '1️⃣')
             await message.add_reaction(emoji = '2️⃣')
-  
+
+old_message = ''
+
+@bot.command(aliases = ['comm'])
+async def start(ctx):
+    commentary.start(ctx)
+
+@tasks.loop(seconds = 60)
+async def commentary(ctx):
+    global old_message
+    c = Cricbuzz()
+    try:
+        com = c.commentary(match_id())['commentary']
+    except:
+        await ctx.send('commentary not found sarr')
+        old_message = ''
+        commentary.stop()
+    message = com[0]['comm']
+    if message == old_message:
+        return
+    message1 = message.replace('<b>',' ').replace('</b>',' ')
+    embed = discord.Embed(title = "COMMENTARY" , colour = discord.Colour.gold())
+    embed.description = f"{message1} "
+    if com[0]['over'] != None:
+        embed.add_field(name='Overs',value=f"{com[0]['over']}",inline = False)
+    await ctx.send(embed = embed)
+    old_message = message
+
+@bot.command()
+async def stop(ctx):
+    global old_message
+    commentary.stop()
+    old_message = ''
+    await ctx.send('chalo bacho commentary khallas, padhai karo')
+
 @bot.command()
 async def football(ctx,*args):
     if args == ():
