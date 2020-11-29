@@ -7,12 +7,14 @@ import os
 import asyncio
 import youtube_dl
 from youtubesearchpython import SearchVideos
+from youtube_transcript_api import YouTubeTranscriptApi
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import random
 import sports
 from pycricbuzz import Cricbuzz
 import ratings
+from datetime import datetime
 
 bot = commands.Bot(command_prefix = '.')
 
@@ -26,9 +28,10 @@ async def on_command_error(ctx , error):
     await ctx.send(error)
 
 load_dotenv()
-servers = (os.getenv('server1'),os.getenv('server2'),os.getenv('server3'),os.getenv('server4'),os.getenv('server5'),os.getenv('server6'))
+servers = (os.getenv('server1'),os.getenv('server2'),os.getenv('server3'),os.getenv('server4'),os.getenv('server5'),os.getenv('server6'),os.getenv('server7'))
 song_list = dict.fromkeys(servers,[])
 Pause_list = dict.fromkeys(servers, False)
+current_list = dict.fromkeys(servers,[])
 
 @bot.command(aliases=['seru'])
 async def join(ctx):
@@ -78,18 +81,19 @@ async def playing_song(ctx,voice_client,server_id):
     radio = {'HiFM':os.getenv('HiFM'),
             'Merge':os.getenv('Merge'),
             'Virgin':os.getenv('Virgin') }
-    
+
     try:
-        song = song_list[server_id][0]
+            song = song_list[server_id].pop(0)
     except:
-        return
-    song_list[server_id].pop(0)
+            return
+    
+    print('return not executed')
 
     if song in radio.keys():
         voice_client.play(discord.FFmpegPCMAudio(radio[song]),after =lambda e: download(ctx,voice_client,server_id))
         await ctx.send(f'Now Playing : {song} Radio') 
         return
-    
+
     results = SearchVideos(song,offset=1,mode='dict',max_results=1)
     x = results.result()
     for I in x['search_result']:
@@ -106,6 +110,9 @@ async def playing_song(ctx,voice_client,server_id):
         ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
         #ytdl.download([I['link']])
     
+    current_list[ctx.guild.id] = []
+    current_list[ctx.guild.id].append(I)
+
     embed = discord.Embed(title=f"*ab suno\n`{I['title']}`\naur apna manorajan karo*", colour=discord.Colour.red())
     embed.set_thumbnail(url = I['thumbnails'][0])
     embed.add_field( name='Duration' , value = I['duration'])
@@ -140,6 +147,14 @@ def spotify_queue(ctx,link):
         for track in album['tracks']['items']:
             song_list[ctx.guild.id].append(f"{track['name']} lyrics")
         return f"Spotify album {album['name']} se {album['total_tracks']} gaano"
+
+@bot.command(aliases=['np'])
+async def now_playing(ctx):
+    I = current_list[ctx.guild.id][0]
+    embed = discord.Embed(title=f"*NOW PLAYING\n`{I['title']}`*", colour=discord.Colour.red())
+    embed.set_thumbnail(url = I['thumbnails'][0])
+    embed.add_field( name='Duration' , value = I['duration'])
+    await ctx.send(embed=embed)
 
 @bot.command(aliases=['line','q'])
 async def queue(ctx):
@@ -197,7 +212,7 @@ async def skip(ctx):
     Pause_list[ctx.guild.id] = False
     ctx.message.guild.voice_client.stop()
     await ctx.send('kya yaar, itne badhiya gane ko hata diya')
-   
+       
 @bot.command(aliases = ['poda','d'])
 async def disconnect(ctx):
     global Pause_list
@@ -206,6 +221,7 @@ async def disconnect(ctx):
         if(x.guild == ctx.message.guild):
             song_list[ctx.guild.id]=[]
             Pause_list[ctx.guild.id] = False
+            current_list[ctx.guild.id]=[]
             await ctx.send('phir milte he')
             return await x.disconnect()
     if bot.voice_clients==[]:
@@ -543,7 +559,7 @@ async def ipl_poll(ctx):
     c = Cricbuzz()
     matches = c.matches()
     for I in matches:
-        if I['srs']=='Indian Premier League 2020' and (I['mchstate']=='inprogress' or I['mchstate']=='preview'):
+        if I['srs']=='Indian Premier League 2020' and (I['mchstate']=='inprogress' or I['mchstate']=='preview' or I['mchstate']=='toss'):
             embed = discord.Embed(title = f"IPL POLLING\n{I['team1']['name']} vs {I['team2']['name']}" , colour = discord.Colour.blue())
             embed.description = f"{I['team1']['name']} : 1️⃣\n\n{I['team2']['name']} : 2️⃣ "
             message = await ctx.send(embed = embed)
@@ -632,4 +648,3 @@ async def dhanyavaad(ctx):
 
 token=os.getenv('token')
 bot.run(token)
-
